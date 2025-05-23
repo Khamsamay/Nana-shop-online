@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+
+    <t t-name="CoaHierarchy">
+        <div class="o_action">
+            <Layout display="display">
+                <div class="table-responsive">
+                    <span t-if="state.heading" class="o_report_heading text-left"><h1 style="margin-left: 1rem;"> <t t-esc="state.heading" /></h1></span>
+                    <div>
+                        <t t-if="state.heading">
+                            <div class="d-flex gap-2 ms-3">
+                                <button type="button" class='btn btn-primary btn-sm' t-on-click.prevent="() => this.exportPDF()"
+                                        title="Print PDF">PRINT PDF
+                                </button>
+                                <button type="button" class='btn btn-primary btn-sm'  t-on-click.prevent="() => this.exportXLS()"
+                                        title="Print XLS">PRINT XLS
+                                </button>
+                            </div>
+                            <table class="table m-2">
+                                <tr style="font-size: 16px;" class="text-center">
+                                    <t name="date_ranges">
+                                        <t t-if="state.html.date_from and state.html.date_to">
+                                            <td>
+                                                <i>
+                                                    Date :
+                                                    <b><t t-esc="state.html.date_from"/> - <t t-esc="state.html.date_to"/></b>
+
+                                                </i>
+                                            </td>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-if="state.html.date_from"><td><i>Date From : <b><t t-esc="state.html.date_from"/></b></i></td></t>
+                                            <t t-if="state.html.date_to"><td><i>Date To : <b><t t-esc="state.html.date_to"/></b></i></td></t>
+                                        </t>
+                                    </t>
+                                    <td><i>Target Moves : <b><t t-esc="state.html.target_move"/></b></i></td>
+                                    <td><i>Display Accounts : <b><t t-esc="state.html.display_account"/></b></i></td>
+                                    <td><i>Report : <b><t t-esc="state.html.report_type"/></b></i></td>
+                                </tr>
+                            </table>
+                            <table  class="o_list_view table table-sm table-hover table-striped o_list_view_ungrouped">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Code</th>
+                                        <th class="text-start">Name</th>
+                                        <th class="text-start">Type</th>
+                                        <t t-if="show_initial_balance">
+                                            <th  style="text-align: right;">Initial Balance</th>
+                                        </t>
+                                        <th  style="text-align: right;">Debit</th>
+                                        <th  style="text-align: right;">Credit</th>
+                                        <t t-if="show_initial_balance">
+                                            <th  style="text-align: right;">Ending Balance</th>
+                                        </t>
+                                        <t t-else="">
+                                            <th  style="text-align: right;">Balance</th>
+                                        </t>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    <t t-call="account_parent.CoAReportLines">
+                                        <t t-set="lines" t-value="state.lines"/>
+                                        <t t-set="hasUpDown" t-value="true"/>
+                                    </t>
+
+                                </tbody>
+                            </table>
+                        </t>
+                        <t t-else="">
+                            <span class="text-center"><h1 class="m-4">Chart of Account Not Loaded.</h1></span>
+                        </t>
+                    </div>
+                </div>
+            </Layout>
+        </div>
+    </t>
+
+    <t t-name="account_parent.CoAReportLines">
+
+        <t t-foreach="lines" t-as="l" t-key="l.id">
+            <t t-set="trclass" t-value="''"/>
+            <t t-if="l.type == 'view'"><t t-set="trclass" t-value="'o_coa_level'"/></t>
+            <t t-set="space_td" t-value="'background-position: ' + 19*(l.level-1) + 'px; padding-left: ' + (4 + 19*(l.level-1)) + 'px;'"/>
+            <t t-set="domainClass" t-value="'o_coa_domain_line_0'"/>
+            <t t-if="l.unfoldable">
+                <t t-set="domainClass" t-value="'o_coa_domain_line_1'"/>
+            </t>
+
+            <tr t-att-class="trclass">
+                <td style="white-space: nowrap;">
+                    <span t-att-style="space_td" t-att-class="domainClass"></span>
+                    <t t-if="l.unfoldable">
+                        <span class="o_coa_unfoldable o_coa_caret_icon" t-on-click="() => this.toggleLine(l)">
+                            <i class="fa fa-fw" t-att-class="l.isFolded ? 'fa-caret-right' : 'fa-caret-down'" role="img" aria-label="Unfold" title="Unfold"/>
+                        </span>
+                    </t>
+                    <t t-raw="l['code']" />
+                </td>
+                <td>
+                    <a class="o_coa_reports_web_action" href="#" t-on-click.prevent="() => this.onClickBoundLink(l)" t-raw="l['name']"/>
+                </td>
+                <td >
+                    <t t-if="l['ac_type'] == 'View'">
+                        <a
+                            class="o_coa_reports_web_action"
+                            href="#"
+                            t-on-click.prevent="() => this.onClickBoundLink(l)">
+                            <t t-esc="l['ac_type']" />
+                        </a>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="l['ac_type']" />
+                    </t>
+                </td>
+                <t t-if="l['show_initial_balance']">
+                    <td style="text-align: right;">
+                        <t t-esc="l['initial_balance']" />
+                    </td>
+                </t>
+                <td style="text-align: right;">
+                    <t t-raw="l['debit']" />
+                </td>
+                <td style="text-align: right;">
+                   <t t-raw="l['credit']"/>
+                </td>
+                <t t-if="l['show_initial_balance']">
+                    <td style="text-align: right;">
+                          <t t-raw="l['ending_balance']" />
+                    </td>
+                </t>
+                <t t-else="">
+                    <td style="text-align: right;">
+                        <t t-raw="l['balance']" />
+                    </td>
+                </t>
+
+            </tr>
+
+            <t t-if="!l.isFolded and l.lines.length" t-call="account_parent.CoAReportLines">
+                <t t-set="lines" t-value="l.lines"/>
+                <t t-set="hasUpDown" t-value="false"/>
+            </t>
+            
+        </t>
+    </t>
+
+    <t t-name="coaReports.buttons">
+        <button id="export_pdf" type="button" class='btn btn-primary btn-sm o_coa-widget-pdf'>PRINT PDF</button>
+        <button id="export_treeview_xls" type="button" class='btn btn-primary btn-sm export_treeview_xls'>PRINT XLS</button>
+    </t>
+
+    <div t-name='coaReports.errorModal' class="modal" id="editable_error" tabindex="-1" data-backdrop="static" role="dialog" aria-hidden="true" style="z-index:9999;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 class="modal-title">Error</h3>
+                </div>
+                <div class="modal-body">
+                    <p id='insert_error' class='text-center'></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</templates>
